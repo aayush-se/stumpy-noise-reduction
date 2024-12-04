@@ -13,6 +13,7 @@ from .aampi import aampi
     exclude=[
         "normalize",
         "T_subseq_isconstant_func",
+        "std_noise",
     ],
 )
 class stumpi:
@@ -128,6 +129,7 @@ class stumpi:
         k=1,
         mp=None,
         T_subseq_isconstant_func=None,
+        std_noise=0.0,
     ):
         """
         Initialize the `stumpi` object
@@ -202,6 +204,8 @@ class stumpi:
             self._T, self._m, self._T_subseq_isconstant_func
         )
 
+        self._std_noise = std_noise
+
         if mp is None:
             mp = stump(
                 self._T,
@@ -254,6 +258,7 @@ class stumpi:
                 self._Σ_T[j],
                 self._T_subseq_isconstant[i],
                 self._T_subseq_isconstant[j],
+                self._std_noise,
             )
             self._left_P[i] = np.sqrt(D_square)
 
@@ -341,6 +346,7 @@ class stumpi:
         self._QT_new[1:] = self._QT[:l] - self._T[:l] * t_drop + self._T[self._m :] * t
         self._QT_new[0] = np.sum(self._T[: self._m] * S[: self._m])
 
+        print("self._std_noise egress", self._std_noise)
         D = core.calculate_distance_profile(
             self._m,
             self._QT_new,
@@ -350,6 +356,7 @@ class stumpi:
             self._Σ_T,
             Q_subseq_isconstant,
             self._T_subseq_isconstant,
+            self._std_noise,
         )
         if np.any(~self._T_isfinite[-self._m :]):
             D[:] = np.inf
@@ -410,6 +417,7 @@ class stumpi:
         QT_new[1:] = self._QT[:l] - T_new[:l] * t_drop + T_new[self._m :] * t
         QT_new[0] = np.sum(T_new[: self._m] * S[: self._m])
 
+        print("self._std_noise update", self._std_noise)
         D = core.calculate_distance_profile(
             self._m,
             QT_new,
@@ -419,6 +427,7 @@ class stumpi:
             Σ_T_new,
             Q_subseq_isconstant,
             T_subseq_isconstant_new,
+            self._std_noise,
         )
         if np.any(~self._T_isfinite[-self._m :]):
             D[:] = np.inf

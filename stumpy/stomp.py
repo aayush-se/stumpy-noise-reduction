@@ -9,7 +9,7 @@ import numpy as np
 from . import config, core, stamp
 
 
-def _stomp(T_A, m, T_B=None, ignore_trivial=True):
+def _stomp(T_A, m, T_B=None, ignore_trivial=True, std_noise=0.0):
     """
     Compute "Scalable Time series Ordered-search Matrix Profile" (STOMP)
 
@@ -152,6 +152,7 @@ def _stomp(T_A, m, T_B=None, ignore_trivial=True):
             Σ_T,
             Q_subseq_isconstant[i],
             T_subseq_isconstant,
+            std_noise,
         )
         if ignore_trivial:
             core.apply_exclusion_zone(D, i, excl_zone, np.inf)

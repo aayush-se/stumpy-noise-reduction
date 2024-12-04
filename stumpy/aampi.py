@@ -77,7 +77,7 @@ class aampi:
     Note that we have extended this algorithm for AB-joins as well.
     """
 
-    def __init__(self, T, m, egress=True, p=2.0, k=1, mp=None):
+    def __init__(self, T, m, egress=True, p=2.0, k=1, mp=None, std_noise=0.0):
         """
         Initialize the `aampi` object
 
@@ -144,6 +144,8 @@ class aampi:
         self._T, self._T_subseq_isfinite = core.preprocess_non_normalized(
             self._T, self._m
         )
+
+        self._std_noise = std_noise
 
         # Retrieve the left matrix profile values
 
@@ -304,6 +306,30 @@ class aampi:
         D[~self._T_subseq_isfinite] = np.inf
         if np.any(~self._T_isfinite[-self._m :]):
             D[:] = np.inf
+
+        if self._std_noise > 0:
+            # print("Correcting for noise in aampi")
+            for i in range(len(D)):
+                if not np.isinf(D[i]):
+                    # Get subsequences for std calculation
+                    if i == 0:
+                        Q = T_new[: self._m]
+                        T_sub = S[: self._m]
+                    else:
+                        Q = T_new[i : i + self._m]
+                        T_sub = T_new[i - 1 : i - 1 + self._m]
+
+                    std_Q = np.std(Q)
+                    std_T = np.std(T_sub)
+
+                    # Apply noise correction
+                    # print("self._std_noise", self._std_noise)
+                    # print("before correction", p_norm_new[i])
+                    D[i] = core._apply_noise_correction(
+                        D[i], self._m, std_Q, std_T, self._std_noise
+                    )
+                    # print("after correction", p_norm_new[i])
+                    # print()
 
         P_new = np.full(self._k, np.inf, dtype=np.float64)
         I_new = np.full(self._k, -1, dtype=np.int64)

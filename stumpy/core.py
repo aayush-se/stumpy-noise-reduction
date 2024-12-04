@@ -1045,7 +1045,7 @@ def compute_mean_std(T, m):
     fastmath={"nsz", "arcp", "contract", "afn", "reassoc"}
 )
 def _calculate_squared_distance(
-    m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant
+    m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant, std_noise
 ):
     """
     Compute a single squared distance given all scalar inputs.
@@ -1105,6 +1105,12 @@ def _calculate_squared_distance(
 
         D_squared = np.abs(2 * m * (1.0 - ρ))
 
+        if std_noise > 0:
+            print("Correcting for noise 2")
+            D_squared = (
+                _apply_noise_correction(np.sqrt(D_squared), m, σ_Q, Σ_T, std_noise) ** 2
+            )
+
     return D_squared
 
 
@@ -1113,7 +1119,7 @@ def _calculate_squared_distance(
     fastmath=True,
 )
 def _calculate_squared_distance_profile(
-    m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant
+    m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant, std_noise
 ):
     """
     Compute the squared distance profile
@@ -1169,7 +1175,14 @@ def _calculate_squared_distance_profile(
             Σ_T[i],
             Q_subseq_isconstant,
             T_subseq_isconstant[i],
+            std_noise,
         )
+
+        # if std_noise > 0:
+        #     print("Correcting for noise 1")
+        #     D_squared[i] = _apply_noise_correction(
+        #         D_squared[i], m, σ_Q, Σ_T[i], std_noise
+        #     )
 
     return D_squared
 
@@ -1179,7 +1192,7 @@ def _calculate_squared_distance_profile(
     fastmath=True,
 )
 def calculate_distance_profile(
-    m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant
+    m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant, std_noise
 ):
     """
     Compute the distance profile
@@ -1223,7 +1236,7 @@ def calculate_distance_profile(
     See Equation on Page 4
     """
     D_squared = _calculate_squared_distance_profile(
-        m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant
+        m, QT, μ_Q, σ_Q, M_T, Σ_T, Q_subseq_isconstant, T_subseq_isconstant, std_noise
     )
 
     return np.sqrt(D_squared)
@@ -4435,3 +4448,45 @@ def _update_incremental_PI(D, P, I, excl_zone, n_appended=0):
             _shift_insert_at_index(I[-1], idx, i + n_appended)
 
     return
+
+
+@njit(fastmath=True)
+def _apply_noise_correction(d, m, std_Q, std_T, std_noise):
+    """
+    Apply noise correction to the squared distance between subsequences
+
+    Parameters
+    ----------
+    d : float
+        Squared distance between subsequences
+    m : int
+        Length of subsequence
+    std_Q : float
+        Standard deviation of query subsequence
+    std_T : float
+        Standard deviation of time series subsequence
+    std_noise : float
+        Standard deviation of noise
+
+    Returns
+    -------
+    float :
+        The noise-corrected squared distance
+    """
+    print("std_Q", std_Q)
+    print("std_T", std_T)
+    # print("std_noise", std_noise)
+    max_std = max(std_Q, std_T)
+    if max_std == 0 or np.isinf(d):
+        return d
+
+    # correction = (2 + 2 * m) * (d**2) / (max_std**2)
+    # print("correction", correction)
+    # return max(0, np.sqrt(d_squared - correction))
+    # return np.sqrt(d**2 - correction)
+    print("d", d)
+    d_corrected = np.sqrt(d**2 - (2 + 2 * m) * std_noise**2 / max_std**2)
+    print("d_corrected", d_corrected)
+    print()
+    # return max(0, d_corrected)
+    return d_corrected
