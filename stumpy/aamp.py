@@ -198,6 +198,7 @@ def _aamp(
     diags,
     ignore_trivial,
     k,
+    std_noise,
 ):
     """
     A Numba JIT-compiled version of AAMP for parallel computation of the matrix
@@ -331,7 +332,7 @@ def _aamp(
     )
 
 
-def aamp(T_A, m, T_B=None, ignore_trivial=True, p=2.0, k=1):
+def aamp(T_A, m, T_B=None, ignore_trivial=True, p=2.0, k=1, std_noise=None):
     """
     Compute the non-normalized (i.e., without z-normalization) matrix profile
 
@@ -430,7 +431,20 @@ def aamp(T_A, m, T_B=None, ignore_trivial=True, p=2.0, k=1):
         diags,
         ignore_trivial,
         k,
+        std_noise,
     )
+
+    if std_noise is None or std_noise > 0:
+        std_Q = np.std(T_A)
+        std_T = np.std(T_B)
+
+        # Naively apply noise correction to each row of P
+        # TODO: Vectorize this
+        for i in range(P.shape[0]):
+            P[i] = core._apply_noise_correction(
+                T_A, P[i][0], m, std_Q, std_T, std_noise
+            )
+            P[i] = 0 if np.isnan(P[i]) else P[i]
 
     out = np.empty((l, 2 * k + 2), dtype=object)
     out[:, :k] = P

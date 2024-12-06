@@ -18,6 +18,7 @@ def _mass_PI(
     right=False,
     T_subseq_isconstant=None,
     Q_subseq_isconstant=None,
+    std_noise=None,
 ):
     """
     Compute "Mueen's Algorithm for Similarity Search" (MASS)
@@ -88,6 +89,7 @@ def _mass_PI(
         Σ_T,
         T_subseq_isconstant=T_subseq_isconstant,
         Q_subseq_isconstant=Q_subseq_isconstant,
+        std_noise=std_noise,
     )
 
     if trivial_idx is not None:
@@ -134,6 +136,7 @@ def stamp(
     ignore_trivial=False,
     T_A_subseq_isconstant=None,
     T_B_subseq_isconstant=None,
+    std_noise=None,
 ):
     """
     Compute matrix profile and indices using the "Scalable Time series
@@ -225,6 +228,7 @@ def stamp(
                 excl_zone,
                 T_subseq_isconstant=T_B_subseq_isconstant,
                 Q_subseq_isconstant=T_A_subseq_isconstant[[i]],
+                std_noise=std_noise,
             )
             for i, subseq in enumerate(subseq_T_A)
         ]
@@ -237,6 +241,7 @@ def stamp(
                 Σ_T,
                 T_subseq_isconstant=T_B_subseq_isconstant,
                 Q_subseq_isconstant=T_A_subseq_isconstant[[i]],
+                std_noise=std_noise,
             )
             for i, subseq in enumerate(subseq_T_A)
         ]

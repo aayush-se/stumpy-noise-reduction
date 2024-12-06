@@ -77,7 +77,7 @@ class aampi:
     Note that we have extended this algorithm for AB-joins as well.
     """
 
-    def __init__(self, T, m, egress=True, p=2.0, k=1, mp=None, std_noise=0.0):
+    def __init__(self, T, m, egress=True, p=2.0, k=1, mp=None, std_noise=None):
         """
         Initialize the `aampi` object
 
@@ -307,8 +307,8 @@ class aampi:
         if np.any(~self._T_isfinite[-self._m :]):
             D[:] = np.inf
 
-        if self._std_noise > 0:
-            # print("Correcting for noise in aampi")
+        # TODO: This could be expensive if we calculate the respective stds for each subsequence and for the timeseries
+        if self._std_noise is None or self._std_noise > 0:
             for i in range(len(D)):
                 if not np.isinf(D[i]):
                     # Get subsequences for std calculation
@@ -323,13 +323,9 @@ class aampi:
                     std_T = np.std(T_sub)
 
                     # Apply noise correction
-                    # print("self._std_noise", self._std_noise)
-                    # print("before correction", p_norm_new[i])
                     D[i] = core._apply_noise_correction(
-                        D[i], self._m, std_Q, std_T, self._std_noise
+                        T_new, D[i], self._m, std_Q, std_T, self._std_noise
                     )
-                    # print("after correction", p_norm_new[i])
-                    # print()
 
         P_new = np.full(self._k, np.inf, dtype=np.float64)
         I_new = np.full(self._k, -1, dtype=np.int64)

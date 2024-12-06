@@ -520,7 +520,7 @@ def stump(
     k=1,
     T_A_subseq_isconstant=None,
     T_B_subseq_isconstant=None,
-    std_noise=0.0,
+    std_noise=None,
 ):
     """
     Compute the z-normalized matrix profile
