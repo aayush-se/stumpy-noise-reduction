@@ -1105,7 +1105,7 @@ def _calculate_squared_distance(
 
         D_squared = np.abs(2 * m * (1.0 - ρ))
 
-        if std_noise is None or std_noise > 0:
+        if std_noise > 0:
             D_squared = (
                 _apply_noise_correction(
                     None, np.sqrt(D_squared), m, σ_Q, Σ_T, std_noise
@@ -1604,7 +1604,7 @@ def mass(
     T_subseq_isconstant=None,
     Q_subseq_isconstant=None,
     query_idx=None,
-    std_noise=None,
+    std_noise=0,
 ):
     """
     Compute the distance profile using the MASS algorithm
@@ -1776,7 +1776,7 @@ def mass(
         if query_idx is not None:
             distance_profile[query_idx] = 0
 
-    if std_noise is None or std_noise > 0:
+    if std_noise > 0:
         distance_profile = _apply_noise_correction(
             T, distance_profile, m, σ_Q, Σ_T, std_noise
         )
@@ -4481,72 +4481,10 @@ def _apply_noise_correction(T, d, m, std_Q, std_T, std_noise):
 
     if T is None:
         std_noise = 0
-    elif std_noise is None:
-        std_noise = _get_fifth_percentile_std_noise(T)
-        # print("5th percentile std_noise", std_noise)
 
-    # d_corrected = np.sqrt(d**2 - (2 + 2 * m) * std_noise**2 / max_std**2)
-    d_corrected = np.sqrt(d**2 - (2 + 2 * m) * (std_noise / max_std) ** 2)
+    d_corrected = np.sqrt(d**2 - (2 + 2 * m) * std_noise**2 / max_std**2)
+
     if d_corrected < 0:
         d_corrected = 0
 
     return d_corrected
-
-
-@njit(fastmath=True)
-def _get_fifth_percentile_std_noise(T):
-    """
-    Compute the 5th percentile of standard deviations across all subsequences
-    to estimate the noise standard deviation.
-
-    Parameters
-    ----------
-    T : numpy.ndarray
-        The time series or sequence for which to compute the noise standard deviation
-
-    Returns
-    -------
-    float :
-        The estimated noise standard deviation based on the 5th percentile of
-        subsequence standard deviations
-    """
-    if T.size == 0:
-        return 0.0
-
-    # T = T[:100]
-
-    # TODO: the rolling window size can become a parameter as well
-
-    # Use rolling window of size 10 by default for subsequence std calculation
-    # This provides a reasonable balance between local variation and noise estimation
-    w = min(10, T.size)
-    # w = T.size
-
-    # Calculate standard deviation for each subsequence
-    n = T.shape[0] - w + 1
-    std_vals = np.empty(n, dtype=np.float64)
-
-    for i in range(n):
-        subseq = T[i : i + w]
-        if np.any(np.isnan(subseq)) or np.any(np.isinf(subseq)):
-            std_vals[i] = np.inf
-        else:
-            std_vals[i] = np.std(subseq)
-
-    # Remove any infinite values before percentile calculation
-    std_vals = std_vals[~np.isinf(std_vals)]
-
-    if std_vals.size == 0:
-        return 0.0
-
-    # Calculate 5th percentile
-    std_vals = np.sort(std_vals)  # Sort for percentile calculation
-    idx = max(0, int(0.05 * std_vals.size) - 1)  # Get 5th percentile index
-
-    # return std_vals[idx] * 30
-    # print("std_vals[idx]", std_vals[-1])
-    std = std_vals[idx]
-
-    # if std < np.ptp(T):
-    #     return 0
-    return std / 6

@@ -77,7 +77,7 @@ class aampi:
     Note that we have extended this algorithm for AB-joins as well.
     """
 
-    def __init__(self, T, m, egress=True, p=2.0, k=1, mp=None, std_noise=None):
+    def __init__(self, T, m, egress=True, p=2.0, k=1, mp=None, std_noise=0):
         """
         Initialize the `aampi` object
 
@@ -171,7 +171,7 @@ class aampi:
             self._p_norm_new = np.empty(self._p_norm.shape[0], dtype=np.float64)
             self._n_appended = 0
 
-    def update(self, t):
+    def update(self, t, std_noise=0):
         """
         Append a single new data point, `t`, to the existing time series `T` and update
         the non-normalized (i.e., without z-normalization) matrix profile and matrix
@@ -194,7 +194,7 @@ class aampi:
         if self._egress:
             self._update_egress(t)
         else:
-            self._update(t)
+            self._update(t, std_noise)
 
     def _update_egress(self, t):
         """
@@ -261,7 +261,7 @@ class aampi:
 
         self._p_norm[:] = self._p_norm_new
 
-    def _update(self, t):
+    def _update(self, t, std_noise):
         """
         Ingress a new data point and update the (top-k) matrix profile and matrix
         profile indices without egressing the oldest data point
@@ -308,7 +308,7 @@ class aampi:
             D[:] = np.inf
 
         # TODO: This could be expensive if we calculate the respective stds for each subsequence and for the timeseries
-        if self._std_noise is None or self._std_noise > 0:
+        if std_noise > 0:
             for i in range(len(D)):
                 if not np.isinf(D[i]):
                     # Get subsequences for std calculation
@@ -324,7 +324,7 @@ class aampi:
 
                     # Apply noise correction
                     D[i] = core._apply_noise_correction(
-                        T_new, D[i], self._m, std_Q, std_T, self._std_noise
+                        T_new, D[i], self._m, std_Q, std_T, std_noise
                     )
 
         P_new = np.full(self._k, np.inf, dtype=np.float64)

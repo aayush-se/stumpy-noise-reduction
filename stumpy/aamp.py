@@ -332,7 +332,7 @@ def _aamp(
     )
 
 
-def aamp(T_A, m, T_B=None, ignore_trivial=True, p=2.0, k=1, std_noise=None):
+def aamp(T_A, m, T_B=None, ignore_trivial=True, p=2.0, k=1, std_noise=0):
     """
     Compute the non-normalized (i.e., without z-normalization) matrix profile
 
@@ -434,7 +434,7 @@ def aamp(T_A, m, T_B=None, ignore_trivial=True, p=2.0, k=1, std_noise=None):
         std_noise,
     )
 
-    if std_noise is None or std_noise > 0:
+    if std_noise > 0:
         std_Q = np.std(T_A)
         std_T = np.std(T_B)
 

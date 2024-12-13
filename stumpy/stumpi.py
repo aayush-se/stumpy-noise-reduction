@@ -129,7 +129,7 @@ class stumpi:
         k=1,
         mp=None,
         T_subseq_isconstant_func=None,
-        std_noise=None,
+        std_noise=0,
     ):
         """
         Initialize the `stumpi` object
@@ -249,7 +249,6 @@ class stumpi:
         for i in np.flatnonzero(self._left_I >= 0 & ~mask):
             j = self._left_I[i]
             QT = np.dot(self._T[i : i + self._m], self._T[j : j + self._m])
-            # print("std_noise", self._std_noise)
             D_square = core._calculate_squared_distance(
                 self._m,
                 QT,

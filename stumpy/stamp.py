@@ -18,7 +18,7 @@ def _mass_PI(
     right=False,
     T_subseq_isconstant=None,
     Q_subseq_isconstant=None,
-    std_noise=None,
+    std_noise=0,
 ):
     """
     Compute "Mueen's Algorithm for Similarity Search" (MASS)
@@ -136,7 +136,7 @@ def stamp(
     ignore_trivial=False,
     T_A_subseq_isconstant=None,
     T_B_subseq_isconstant=None,
-    std_noise=None,
+    std_noise=0,
 ):
     """
     Compute matrix profile and indices using the "Scalable Time series
