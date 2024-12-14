@@ -4482,7 +4482,7 @@ def _apply_noise_correction(T, d, m, std_Q, std_T, std_noise):
     if T is None:
         std_noise = 0
 
-    d_corrected = np.sqrt(d**2 - (2 + 2 * m) * std_noise**2 / max_std**2)
+    d_corrected = np.sqrt(d**2 - (2 + 2 * m) * (std_noise**2 / max_std**2))
 
     if d_corrected < 0:
         d_corrected = 0

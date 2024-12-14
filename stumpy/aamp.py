@@ -439,12 +439,18 @@ def aamp(T_A, m, T_B=None, ignore_trivial=True, p=2.0, k=1, std_noise=0):
         std_T = np.std(T_B)
 
         # Naively apply noise correction to each row of P
-        # TODO: Vectorize this
+        # Original code:
         for i in range(P.shape[0]):
             P[i] = core._apply_noise_correction(
                 T_A, P[i][0], m, std_Q, std_T, std_noise
             )
             P[i] = 0 if np.isnan(P[i]) else P[i]
+
+        # # Vectorized version
+        # P_corrected = np.array(
+        #     [apply_noise_correction(T_A, p[0], m, std_Q, std_T, std_noise) for p in P]
+        # )
+        # P = np.where(np.isnan(P_corrected), 0, P_corrected)
 
     out = np.empty((l, 2 * k + 2), dtype=object)
     out[:, :k] = P
