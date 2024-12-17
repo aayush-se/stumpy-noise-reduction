@@ -1106,12 +1106,7 @@ def _calculate_squared_distance(
         D_squared = np.abs(2 * m * (1.0 - ρ))
 
         if std_noise > 0:
-            D_squared = (
-                _apply_noise_correction(
-                    None, np.sqrt(D_squared), m, σ_Q, Σ_T, std_noise
-                )
-                ** 2
-            )
+            D_squared = _apply_noise_correction(None, D_squared, m, σ_Q, Σ_T, std_noise)
 
     return D_squared
 
@@ -4479,12 +4474,8 @@ def _apply_noise_correction(T, d, m, std_Q, std_T, std_noise):
     if max_std == 0 or np.isinf(d):
         return d
 
-    if T is None:
-        std_noise = 0
-
-    d_corrected = np.sqrt(d**2 - (2 + 2 * m) * (std_noise**2 / max_std**2))
-
-    if d_corrected < 0:
+    d_corrected = np.sqrt(d**2 - (2 + 2 * m) * std_noise**2 / max_std**2)
+    if d_corrected < 0 or np.isnan(d_corrected):
         d_corrected = 0
 
     return d_corrected

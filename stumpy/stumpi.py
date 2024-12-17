@@ -268,7 +268,7 @@ class stumpi:
             self._QT_new = np.empty(self._QT.shape[0], dtype=np.float64)
             self._n_appended = 0
 
-    def update(self, t):
+    def update(self, t, std_noise=0):
         """
         Append a single new data point, `t`, to the existing time series `T` and update
         the (top-k) matrix profile and matrix profile indices.
@@ -288,9 +288,9 @@ class stumpi:
         Note that line 11 is missing an important `sqrt` operation!
         """
         if self._egress:
-            self._update_egress(t)
+            self._update_egress(t, std_noise)
         else:
-            self._update(t)
+            self._update(t, std_noise)
 
     def _update_egress(self, t):
         """
@@ -372,7 +372,7 @@ class stumpi:
 
         self._QT[:] = self._QT_new
 
-    def _update(self, t):
+    def _update(self, t, std_noise):
         """
         Ingress a new data point and update the (top-k) matrix profile and matrix
         profile indices without egressing the oldest data point
@@ -425,7 +425,7 @@ class stumpi:
             Σ_T_new,
             Q_subseq_isconstant,
             T_subseq_isconstant_new,
-            self._std_noise,
+            std_noise,
         )
         if np.any(~self._T_isfinite[-self._m :]):
             D[:] = np.inf

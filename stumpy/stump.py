@@ -745,6 +745,18 @@ def stump(
         k,
     )
 
+    if std_noise > 0:
+        std_Q = np.std(T_A)
+        std_T = np.std(T_B)
+
+        # Naively apply noise correction to each row of P
+        # Original code:
+        for i in range(P.shape[0]):
+            P[i] = core._apply_noise_correction(
+                T_A, P[i][0], m, std_Q, std_T, std_noise
+            )
+            P[i] = 0 if np.isnan(P[i]) else P[i]
+
     out = np.empty((l, 2 * k + 2), dtype=object)  # last two columns are to
     # store left and right matrix profile indices
     out[:, :k] = P

@@ -308,7 +308,7 @@ class aampi:
             D[:] = np.inf
 
         if std_noise > 0:
-            # Unvectorized version
+            # TODO: Vectorize this
             for i in range(len(D)):
                 if not np.isinf(D[i]):
                     # Get subsequences for std calculation
@@ -326,28 +326,6 @@ class aampi:
                     D[i] = core._apply_noise_correction(
                         T_new, D[i], self._m, std_Q, std_T, std_noise
                     )
-
-            # Vectorized version
-            # # Create rolling windows for std calculation
-            # Q = np.lib.stride_tricks.sliding_window_view(T_new, self._m)[: len(D)]
-            # T_sub = np.lib.stride_tricks.sliding_window_view(T_new[:-1], self._m)[: len(D)]
-
-            # # Handle first window specially
-            # Q[0] = T_new[: self._m]
-            # T_sub[0] = S[: self._m]
-
-            # # Calculate stds for all windows at once
-            # std_Q = np.std(Q, axis=1)
-            # std_T = np.std(T_sub, axis=1)
-
-            # # Only apply correction where D is finite
-            # finite_mask = ~np.isinf(D)
-            # D[finite_mask] = np.array(
-            #     [
-            #         apply_noise_correction(T_new, d, self._m, q, t, std_noise)
-            #         for d, q, t in zip(D[finite_mask], std_Q[finite_mask], std_T[finite_mask])
-            #     ]
-            # )
 
         P_new = np.full(self._k, np.inf, dtype=np.float64)
         I_new = np.full(self._k, -1, dtype=np.int64)
